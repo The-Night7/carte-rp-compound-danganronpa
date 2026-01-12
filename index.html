@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Générateur de carte d'identification RP</title>
+  <style>
+    :root{
+      --bg:#0e1116;
+      --panel:#141a22;
+      --panel2:#10151c;
+      --txt:#e9eef6;
+      --muted:#a9b3c3;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 600px at 20% -10%, #1b2a3a 0%, transparent 60%),
+      radial-gradient(900px 500px at 90% 0%, #2a1b3a 0%, transparent 55%),
+      var(--bg);
+      color:var(--txt);
+    }
+    header{
+      padding:20px 16px 0;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    header h1{
+      margin:0 0 6px;
+      font-size:20px;
+      font-weight:700;
+    }
+    header p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .wrap{
+      max-width:1200px;
+      margin:16px auto 30px;
+      padding:0 16px 22px;
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap:16px;
+      align-items:start;
+    }
+    .cardPanel, .previewPanel, .notesPanel{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), transparent 55%), var(--panel);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:14px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+    }
+    .panelHead{
+      padding:14px 14px 10px;
+      border-bottom:1px solid rgba(255,255,255,.06);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+    }
+    .panelHead strong{ font-size:13px; }
+    .panelHead .mini{
+      color:var(--muted);
+      font-size:12px;
+    }
+    .form{
+      padding:14px;
+      display:grid;
+      gap:10px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin:0 0 6px;
+    }
+    input[type="text"], input[type="url"], input[type="number"]{
+      width:100%;
+      padding:10px 10px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.10);
+      background:var(--panel2);
+      color:var(--txt);
+      outline:none;
+    }
+    input[type="file"]{
+      width:100%;
+      color:var(--muted);
+    }
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height:1.35;
+    }
+    .btns{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      padding:14px;
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    button{
+      border:1px solid rgba(255,255,255,.12);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      color:var(--txt);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+    }
+    button.primary{
+      border-color: rgba(139,211,255,.35);
+      box-shadow: 0 0 0 3px rgba(139,211,255,.08) inset;
+    }
+    button:active{ transform: translateY(1px); }
+
+    .right{
+      display:grid;
+      gap:16px;
+    }
+    .previewPanel{ padding:14px; }
+    .previewTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .previewTop strong{ font-size:13px; }
+    .scale{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .scale input{ width:180px; }
+
+    .stage{
+      display:flex;
+      justify-content:center;
+      padding:10px;
+      overflow:auto;
+      border:1px dashed rgba(255,255,255,.10);
+      border-radius:12px;
+      background: radial-gradient(800px 400px at 40% 0%, rgba(139,211,255,.08), transparent 65%);
+    }
+
+    /* ===== ID card ===== */
+    .idCard{
+      position:relative;
+      width: 720px;
+      height: 510px;
+      border-radius:8px;
+      overflow:hidden;
+      transform-origin: top left;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+
+      /* BORDURE qui fait le tour (comme demandé) */
+      border: 3px solid rgba(255,255,255,.70);
+      outline: 1px solid rgba(0,0,0,.25);
+      outline-offset: -3px;
+
+      background: #3d4a4a;
+    }
+    .bgImage{
+      position:absolute; inset:0;
+      background-size:cover;
+      background-position:center;
+      opacity:.9;
+    }
+    .bgOverlay{
+      position:absolute; inset:0;
+      background: radial-gradient(900px 500px at 50% 10%, rgba(255,255,255,.12), transparent 65%),
+      linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22));
+    }
+    .desk{
+      position:absolute;
+      left:0; right:0; bottom:0;
+      height:48px;
+      background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.25)),
+      #2b2019;
+    }
+
+    .avatarSmallWrap{
+      position:absolute;
+      top:16px;
+      left:18px;
+      width:74px;
+      height:74px;
+      border-radius:6px;
+      background:rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.22);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .avatarSmallWrap img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .titleWrap{
+      position:absolute;
+      top:26px;
+      left:110px;
+      right:18px;
+      display:flex;
+      align-items:flex-end;
+      gap:10px;
+    }
+    .title{
+      font-size:26px;
+      font-weight:800;
+      text-shadow: 0 2px 10px rgba(0,0,0,.35);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .spec{
+      font-size:14px;
+      font-weight:700;
+      color:rgba(233,238,246,.95);
+      opacity:.95;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 280px;
+    }
+    .titleLine{
+      position:absolute;
+      top:60px;
+      left:110px;
+      right:18px;
+      height:10px;
+      border-bottom:5px solid rgba(255,255,255,.75);
+      border-radius:2px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.25));
+    }
+
+    .artWrap{
+      position:absolute;
+      left:32px;
+      top:118px;
+      width: 310px;
+      height: 360px;
+      background: rgba(255,255,255,.10);
+      border:2px solid rgba(255,255,255,.55);
+      box-shadow: 0 8px 22px rgba(0,0,0,.35);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+    }
+    .artWrap img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .rightInfo{
+      position:absolute;
+      left:370px;
+      top:150px;
+      right:36px;
+    }
+    .field{ margin-bottom:26px; }
+    .field .value{
+      font-size:28px;
+      font-weight:500;
+      text-align:center;
+      text-shadow: 0 2px 10px rgba(0,0,0,.30);
+    }
+    .underline{
+      margin:10px auto 0;
+      height:4px;
+      width:100%;
+      background: rgba(255,255,255,.75);
+      border-radius:2px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    .flags{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      margin-top:18px;
+    }
+    .flag{
+      width:66px;
+      height:44px;
+      border-radius:4px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.45);
+      box-shadow: 0 6px 14px rgba(0,0,0,.25);
+      background:rgba(255,255,255,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .flag img{ width:100%; height:100%; object-fit:cover; }
+
+    .notesPanel{
+      padding:14px;
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.45;
+      border-radius:14px;
+    }
+
+    @media (max-width: 980px){
+      .wrap{ grid-template-columns: 1fr; }
+      .scale input{ width:140px; }
+    }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Générateur de carte d'identification (RP)</h1>
+</header>
+
+<div class="wrap">
+  <!-- LEFT -->
+  <section class="cardPanel">
+    <div class="panelHead">
+      <strong>Paramètres</strong>
+      <span class="mini">Autosave local</span>
+    </div>
+
+    <div class="form">
+      <div>
+        <label for="title">Titre</label>
+        <input id="title" type="text" placeholder="Ultime scientifique" />
+      </div>
+
+      <div>
+        <label for="spec">Spécialisation (obligatoire)</label>
+        <input id="spec" type="text" placeholder="(spécialisation ???)" />
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="name1">Nom / champ 1</label>
+          <input id="name1" type="text" placeholder="Kanaita" />
+        </div>
+        <div>
+          <label for="name2">Nom / champ 2</label>
+          <input id="name2" type="text" placeholder="Ichita" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="flag1">Drapeau 1 (URL image)</label>
+          <input id="flag1" type="url" placeholder="https://..." />
+        </div>
+        <div>
+          <label for="flag2">Drapeau 2 (URL image)</label>
+          <input id="flag2" type="url" placeholder="https://..." />
+        </div>
+      </div>
+
+      <div>
+        <label for="artUpload">Illustration principale (image)</label>
+        <input id="artUpload" type="file" accept="image/*" />
+        <div class="hint">
+          Le fond et le petit avatar ne se chargent pas ici : ils viennent de fichiers locaux (dans le même dossier).
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label for="opacity">Intensité fond</label>
+          <input id="opacity" type="number" min="0" max="1" step="0.05" />
+        </div>
+        <div>
+          <label for="desk">Bande bas (couleur)</label>
+          <input id="desk" type="text" placeholder="#2b2019" />
+        </div>
+      </div>
+
+      <div class="hint">
+        <b>À mettre dans le même dossier que ce fichier :</b>
+        <ul>
+          <li><code>fond.png</code> (ou .jpg)</li>
+          <li><code>avatar.png</code> (ou .jpg)</li>
+        </ul>
+        Si tes noms de fichiers sont différents, modifie <code>FIXED_BG_SRC</code> et <code>FIXED_AVATAR_SRC</code> dans le JS.
+      </div>
+    </div>
+
+    <div class="btns">
+      <button class="primary" id="downloadPng">Exporter en PNG</button>
+      <button id="reset">Réinitialiser</button>
+    </div>
+  </section>
+
+  <!-- RIGHT -->
+  <section class="right">
+    <div class="previewPanel">
+      <div class="previewTop">
+        <strong>Aperçu</strong>
+        <div class="scale">
+          <span>Zoom</span>
+          <input id="zoom" type="range" min="40" max="140" value="100" />
+          <span id="zoomVal">100%</span>
+        </div>
+      </div>
+
+      <div class="stage">
+        <div class="idCard" id="card">
+          <div class="bgImage" id="bgImage"></div>
+          <div class="bgOverlay"></div>
+
+          <div class="avatarSmallWrap">
+            <img id="smallImg" alt="" />
+          </div>
+
+          <div class="titleWrap">
+            <div class="title" id="titleOut">Ultime scientifique</div>
+            <div class="spec" id="specOut">(spécialisation ???)</div>
+          </div>
+          <div class="titleLine"></div>
+
+          <div class="artWrap">
+            <img id="artImg" alt="" />
+          </div>
+
+          <div class="rightInfo">
+            <div class="field">
+              <div class="value" id="name1Out">Kanaita</div>
+              <div class="underline"></div>
+            </div>
+
+            <div class="flags">
+              <div class="flag"><img id="flag1Img" alt="" /></div>
+              <div class="flag"><img id="flag2Img" alt="" /></div>
+            </div>
+
+            <div class="field" style="margin-top:18px;">
+              <div class="value" id="name2Out">Ichita</div>
+              <div class="underline"></div>
+            </div>
+          </div>
+
+          <div class="desk" id="deskBar"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="notesPanel">
+      <strong>Important</strong>
+      <ul>
+        <li><b>Fond + avatar fixes</b> : ce sont des fichiers locaux. Ouvre idéalement le fichier via un petit serveur (ex: extension “Live Server” sur VS Code) pour éviter certains soucis.</li>
+        <li><b>Export PNG</b> : marche mieux si les images viennent d’upload (dataURL). Pour des images locales, ça marche généralement si la page est servie en http:// (Live Server).</li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+
+  // Mets ici tes noms de fichiers (dans le même dossier que ce .html)
+  const FIXED_BG_SRC = "./fond.png";
+  const FIXED_AVATAR_SRC = "./avatar.png";
+
+  const defaults = {
+    title: "Ultime scientifique",
+    spec: "(spécialisation ???)",
+    name1: "Kanaita",
+    name2: "Ichita",
+    flag1: "",
+    flag2: "",
+    opacity: 0.85,
+    desk: "#2b2019",
+    artData: "" // seule l'illustration principale est variable
+  };
+  const stateKey = "rp_id_card_generator_v2_fixed_bg_avatar";
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(stateKey);
+      if(!raw) return {...defaults};
+      const parsed = JSON.parse(raw);
+      return { ...defaults, ...parsed };
+    }catch(e){
+      return {...defaults};
+    }
+  }
+  function saveState(s){ localStorage.setItem(stateKey, JSON.stringify(s)); }
+
+  function fileToDataURL(file){
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  let state = loadState();
+
+  function applyToForm(){
+    $("title").value = state.title;
+    $("spec").value = state.spec;
+    $("name1").value = state.name1;
+    $("name2").value = state.name2;
+    $("flag1").value = state.flag1;
+    $("flag2").value = state.flag2;
+    $("opacity").value = state.opacity;
+    $("desk").value = state.desk;
+  }
+
+  function applyToPreview(){
+    $("titleOut").textContent = state.title || "";
+    $("specOut").textContent = state.spec || "";
+    $("name1Out").textContent = state.name1 || "";
+    $("name2Out").textContent = state.name2 || "";
+
+    // Fixed background
+    const bg = $("bgImage");
+    bg.style.opacity = String(state.opacity ?? 0.85);
+    bg.style.backgroundImage = `url('${FIXED_BG_SRC}')`;
+
+    // Fixed small avatar
+    const sImg = $("smallImg");
+    sImg.src = FIXED_AVATAR_SRC;
+    sImg.style.display = "block";
+
+    // Main art (upload)
+    const aImg = $("artImg");
+    aImg.src = state.artData || "";
+    aImg.style.display = state.artData ? "block" : "none";
+
+    // Flags
+    $("flag1Img").src = state.flag1 || "";
+    $("flag2Img").src = state.flag2 || "";
+    $("flag1Img").style.display = state.flag1 ? "block" : "none";
+    $("flag2Img").style.display = state.flag2 ? "block" : "none";
+
+    // Bottom desk color
+    $("deskBar").style.background =
+            `linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.25)), ${state.desk || "#2b2019"}`;
+  }
+
+  function updateStateFromForm(){
+    state.title = $("title").value;
+    state.spec  = $("spec").value;
+    state.name1 = $("name1").value;
+    state.name2 = $("name2").value;
+    state.flag1 = $("flag1").value;
+    state.flag2 = $("flag2").value;
+    state.opacity = Number($("opacity").value || 0.85);
+    state.desk = $("desk").value || "#2b2019";
+
+    saveState(state);
+    applyToPreview();
+  }
+
+  ["title","spec","name1","name2","flag1","flag2","opacity","desk"].forEach(id=>{
+    $(id).addEventListener("input", updateStateFromForm);
+  });
+
+  $("artUpload").addEventListener("change", async (e)=>{
+    const f = e.target.files && e.target.files[0];
+    if(!f) return;
+    state.artData = await fileToDataURL(f);
+    saveState(state);
+    applyToPreview();
+  });
+
+  function setZoom(v){
+    const scale = Number(v)/100;
+    $("card").style.transform = `scale(${scale})`;
+    $("zoomVal").textContent = `${v}%`;
+  }
+  $("zoom").addEventListener("input", (e)=> setZoom(e.target.value));
+
+  $("downloadPng").addEventListener("click", async ()=>{
+    const card = $("card");
+    const prevTransform = card.style.transform;
+    card.style.transform = "scale(1)";
+
+    try{
+      const canvas = await html2canvas(card, {
+        backgroundColor: null,
+        useCORS: true,
+        allowTaint: false,
+        scale: 2
+      });
+      const link = document.createElement("a");
+      link.download = (state.name1 || "carte") + ".png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }catch(err){
+      alert("Export PNG impossible (souvent lié au chargement des images locales/CORS). Essaie d'ouvrir via Live Server (VS Code).");
+      console.error(err);
+    }finally{
+      card.style.transform = prevTransform;
+    }
+  });
+
+  $("reset").addEventListener("click", ()=>{
+    if(!confirm("Réinitialiser la carte et effacer les données sauvegardées ?")) return;
+    localStorage.removeItem(stateKey);
+    state = {...defaults};
+    applyToForm();
+    applyToPreview();
+  });
+
+  // Init
+  applyToForm();
+  applyToPreview();
+  setZoom($("zoom").value);
+</script>
+</body>
+</html>
