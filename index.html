@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Générateur de carte d'identification RP</title>
+  <title>~𝔇𝔞𝔫𝔤𝔞𝔫𝔯𝔬𝔫𝔭𝔞 : ~Death at Bloody Water~</title>
   <style>
     :root{
       --bg:#0e1116;
@@ -163,15 +163,24 @@
       border-radius:8px;
       overflow:hidden;
       transform-origin: top left;
+
+      /* Bordure plus fine + cadre (double liseré) */
+      border: 1px solid rgba(255,255,255,.55);
+
       box-shadow: 0 18px 40px rgba(0,0,0,.45);
-
-      /* BORDURE qui fait le tour (comme demandé) */
-      border: 3px solid rgba(255,255,255,.70);
-      outline: 1px solid rgba(0,0,0,.25);
-      outline-offset: -3px;
-
       background: #3d4a4a;
     }
+
+    /* Cadre intérieur */
+    .idCard::after{
+      content:"";
+      position:absolute;
+      inset: 8px;                 /* ajuste la “marge” du cadre */
+      border: 1px solid rgba(0,0,0,.35);
+      border-radius: 6px;
+      pointer-events:none;
+    }
+
     .bgImage{
       position:absolute; inset:0;
       background-size:cover;
@@ -182,13 +191,6 @@
       position:absolute; inset:0;
       background: radial-gradient(900px 500px at 50% 10%, rgba(255,255,255,.12), transparent 65%),
       linear-gradient(0deg, rgba(0,0,0,.22), rgba(0,0,0,.22));
-    }
-    .desk{
-      position:absolute;
-      left:0; right:0; bottom:0;
-      height:48px;
-      background: linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.25)),
-      #2b2019;
     }
 
     .avatarSmallWrap{
@@ -327,7 +329,7 @@
 </head>
 <body>
 <header>
-  <h1>Générateur de carte d'identification (RP)</h1>
+  <h1>Générateur de carte d'identification (~𝔇𝔞𝔫𝔤𝔞𝔫𝔯𝔬𝔫𝔭𝔞 : ~Death at Bloody Water~)</h1>
 </header>
 
 <div class="wrap">
@@ -341,7 +343,7 @@
     <div class="form">
       <div>
         <label for="title">Titre</label>
-        <input id="title" type="text" placeholder="Ultime scientifique" />
+        <input id="title" type="text" placeholder="Ultime ???" />
       </div>
 
       <div>
@@ -352,11 +354,11 @@
       <div class="row">
         <div>
           <label for="name1">Nom / champ 1</label>
-          <input id="name1" type="text" placeholder="Kanaita" />
+          <input id="name1" type="text" placeholder="???" />
         </div>
         <div>
           <label for="name2">Nom / champ 2</label>
-          <input id="name2" type="text" placeholder="Ichita" />
+          <input id="name2" type="text" placeholder="???" />
         </div>
       </div>
 
@@ -374,9 +376,6 @@
       <div>
         <label for="artUpload">Illustration principale (image)</label>
         <input id="artUpload" type="file" accept="image/*" />
-        <div class="hint">
-          Le fond et le petit avatar ne se chargent pas ici : ils viennent de fichiers locaux (dans le même dossier).
-        </div>
       </div>
 
       <div class="row">
@@ -384,19 +383,6 @@
           <label for="opacity">Intensité fond</label>
           <input id="opacity" type="number" min="0" max="1" step="0.05" />
         </div>
-        <div>
-          <label for="desk">Bande bas (couleur)</label>
-          <input id="desk" type="text" placeholder="#2b2019" />
-        </div>
-      </div>
-
-      <div class="hint">
-        <b>À mettre dans le même dossier que ce fichier :</b>
-        <ul>
-          <li><code>fond.png</code> (ou .jpg)</li>
-          <li><code>avatar.png</code> (ou .jpg)</li>
-        </ul>
-        Si tes noms de fichiers sont différents, modifie <code>FIXED_BG_SRC</code> et <code>FIXED_AVATAR_SRC</code> dans le JS.
       </div>
     </div>
 
@@ -428,7 +414,7 @@
           </div>
 
           <div class="titleWrap">
-            <div class="title" id="titleOut">Ultime scientifique</div>
+            <div class="title" id="titleOut">Ultime ???</div>
             <div class="spec" id="specOut">(spécialisation ???)</div>
           </div>
           <div class="titleLine"></div>
@@ -439,7 +425,7 @@
 
           <div class="rightInfo">
             <div class="field">
-              <div class="value" id="name1Out">Kanaita</div>
+              <div class="value" id="name1Out">???</div>
               <div class="underline"></div>
             </div>
 
@@ -449,22 +435,12 @@
             </div>
 
             <div class="field" style="margin-top:18px;">
-              <div class="value" id="name2Out">Ichita</div>
+              <div class="value" id="name2Out">???</div>
               <div class="underline"></div>
             </div>
           </div>
-
-          <div class="desk" id="deskBar"></div>
         </div>
       </div>
-    </div>
-
-    <div class="notesPanel">
-      <strong>Important</strong>
-      <ul>
-        <li><b>Fond + avatar fixes</b> : ce sont des fichiers locaux. Ouvre idéalement le fichier via un petit serveur (ex: extension “Live Server” sur VS Code) pour éviter certains soucis.</li>
-        <li><b>Export PNG</b> : marche mieux si les images viennent d’upload (dataURL). Pour des images locales, ça marche généralement si la page est servie en http:// (Live Server).</li>
-      </ul>
     </div>
   </section>
 </div>
@@ -478,14 +454,13 @@
   const FIXED_AVATAR_SRC = "./avatar.png";
 
   const defaults = {
-    title: "Ultime scientifique",
+    title: "Ultime ???",
     spec: "(spécialisation ???)",
-    name1: "Kanaita",
-    name2: "Ichita",
+    name1: "???",
+    name2: "???",
     flag1: "",
     flag2: "",
     opacity: 0.85,
-    desk: "#2b2019",
     artData: "" // seule l'illustration principale est variable
   };
   const stateKey = "rp_id_card_generator_v2_fixed_bg_avatar";
@@ -521,7 +496,6 @@
     $("flag1").value = state.flag1;
     $("flag2").value = state.flag2;
     $("opacity").value = state.opacity;
-    $("desk").value = state.desk;
   }
 
   function applyToPreview(){
@@ -550,10 +524,6 @@
     $("flag2Img").src = state.flag2 || "";
     $("flag1Img").style.display = state.flag1 ? "block" : "none";
     $("flag2Img").style.display = state.flag2 ? "block" : "none";
-
-    // Bottom desk color
-    $("deskBar").style.background =
-            `linear-gradient(180deg, rgba(0,0,0,.10), rgba(0,0,0,.25)), ${state.desk || "#2b2019"}`;
   }
 
   function updateStateFromForm(){
@@ -564,13 +534,12 @@
     state.flag1 = $("flag1").value;
     state.flag2 = $("flag2").value;
     state.opacity = Number($("opacity").value || 0.85);
-    state.desk = $("desk").value || "#2b2019";
 
     saveState(state);
     applyToPreview();
   }
 
-  ["title","spec","name1","name2","flag1","flag2","opacity","desk"].forEach(id=>{
+  ["title","spec","name1","name2","flag1","flag2","opacity"].forEach(id=>{
     $(id).addEventListener("input", updateStateFromForm);
   });
 
